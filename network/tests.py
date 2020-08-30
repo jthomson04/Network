@@ -20,7 +20,8 @@ class BrowserTests(TestCase):
             self.assertEqual(len(response.context['pages']), 3)
             self.assertEqual(response.context['firstpage'], True)
             self.assertEqual(response.context['lastpage'], False)
-            
+            self.assertEqual(response.context['userpage'], False)
+            self.assertEqual(response.context['title'], 'All Posts')
             # Checks for negative and invalid pages
             response = c.get(reverse('index') + '?pagenum=-3')
             self.assertEqual(response.status_code, 404)
@@ -35,6 +36,13 @@ class BrowserTests(TestCase):
             self.assertEqual(len(response.context['items']), 7)
             self.assertEqual(response.context['firstpage'], False)
             self.assertEqual(response.context['lastpage'], True)
+
+    def test_userpage(self):
+        c = Client()
+        response = c.get(reverse('viewuser', args=('jthomson',)))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['userpage'], True)
+        self.assertEqual(response.context['title'], 'jthomson')
 
 
 
