@@ -1,7 +1,25 @@
-from django.test import TestCase
+from django.test import TestCase, LiveServerTestCase
 from .models import User, Post
+from time import sleep
+from selenium import webdriver
+
 # Create your tests here.
-class Tests(TestCase):
+class BrowserTests(LiveServerTestCase):
+    def setUp(self):
+        self.selenium = webdriver.Chrome()
+        super(BrowserTests, self).setUp()
+    def test_title(self):
+        selenium = self.selenium
+        selenium.get('http://127.0.0.1:8000/')
+        self.assertEqual(selenium.title, 'Social Network') 
+        
+    def tearDown(self):
+        self.selenium.quit()
+        super(BrowserTests, self).tearDown()
+
+
+
+class ServerTests(TestCase):
     def setUp(self):
         #  Create users
         john = User.objects.create_user(username='jthomson', email="jthomson@yahoo.com", password='pass')
@@ -10,7 +28,7 @@ class Tests(TestCase):
         john.save()
         elon.save()
         homie.save()
-        print(john.following)
+        
         # Set followers 
         john.following.add(elon, homie);
         elon.following.add(homie);

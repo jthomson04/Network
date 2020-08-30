@@ -1,14 +1,34 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django.urls import reverse
-
-from .models import User
+from django.core.paginator import Paginator
+from .models import User, Post
 
 
 def index(request):
-    return render(request, "network/index.html")
+    posts = Post.objects.all()
+    if posts.count() == 0:
+        return render(request, "network/index.html", {
+            'empty': True
+        })
+    paginator = Paginator(posts, 10)
+    pagenum = int(request.GET.get('pagenum', 1))
+    if int(pagenum) in paginator.page_range:
+        items = paginator.page(pagenum)
+    else:
+        raise Http404
+        
+    print(pagenum == 1)
+    print(pagenum == paginator.num_pages)
+    return render(request, "network/index.html", {
+        'items': items,
+        'pagenum': pagenum,
+        'pages': [p for p in paginator.page_range],
+        'firstpage': pagenum == 1,
+        'lastpage': pagenum == paginator.num_pages
+    })
 
 
 def login_view(request):

@@ -1,5 +1,76 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    TODO
+    <h1 style="text-align: center;">All Posts</h1>
+    <div class="row">
+        <div class="col-md-8 col-lg-6 offset-md-2 offset-lg-3">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">New Post</h3>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control" rows=4></textarea>
+                </div>
+                <button class="btn btn-outline-primary my-2 btn-block col-xs-10 offset-xs-1 col-md-8 offset-md-2">Post</button>
+            </div>
+        </div>
+    </div>
+    {% if not empty %}
+        <ul class="pagination justify-content-center my-3">
+            {% if firstpage %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                        <span>&laquo</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'index' %}?pagenum={{ pagenum|add:-1 }}">
+                        <span>&laquo</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% for num in pages %}
+                {% if num == pagenum %}
+                    <li class="page-item active">
+                {% else %}
+                    <li class="page-item">
+                {% endif %}
+                        <a class="page-link" href="{% url 'index' %}?pagenum={{ num }}">{{ num }}</a>
+                    </li>
+
+            {% endfor %}
+            {% if lastpage %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                        <span>&raquo</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'index' %}?pagenum={{ pagenum|add:1 }}">
+                        <span>&raquo</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+        {% for item in items %}
+        <div class="row">
+            <div class="col-md-8 col-lg-6 offset-md-2 offset-lg-3 my-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">{{ item.posting_user.username }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="my-2">{{ item.content }}</div>
+                        <i class="fa fa-heart likebutton mx-1"></i>
+                        <span class="likeamount">{{ item.likes.count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+    
+    
 {% endblock %}

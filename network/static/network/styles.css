@@ -1,0 +1,10 @@
+.center {
+    text-align: center;
+    margin: 0 auto;
+}
+.likebutton:hover {
+    color: red;
+}
+.likebutton, .likeamount {
+    font-size: 20px !important;
+}
