@@ -8,29 +8,8 @@ from .models import User, Post
 
 
 def index(request):
-    posts = Post.objects.all()
-    if posts.count() == 0:
-        return render(request, "network/index.html", {
-            'empty': True
-        })
-    paginator = Paginator(posts, 10)
-    pagenum = request.GET.get('pagenum', 1)
-    try: 
-        pagenum = int(pagenum)
-    except ValueError:
-        raise Http404
-    if pagenum in paginator.page_range:
-        items = paginator.page(pagenum)
-    else:
-        raise Http404
-    print(type(items))    
-    return render(request, "network/index.html", {
-        'items': items,
-        'pagenum': pagenum,
-        'pages': [p for p in paginator.page_range],
-        'firstpage': pagenum == 1,
-        'lastpage': pagenum == paginator.num_pages
-    })
+    posts = Post.objects.all().order_by('-time')
+    return showposts(request, posts)
 
 
 def login_view(request):
@@ -83,3 +62,37 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+def viewuser(request, username):
+    try:
+        user = User.objects.get(username=username)
+    except NameError:
+        raise Http404
+    posts = Post.objects.filter(posting_user=user).order_by('-time')
+    return showposts(request, posts, True, user.username)
+
+
+def showposts(request, posts, userpage=False, title='All Posts'):
+    if posts.count() == 0:
+        return render(request, "network/index.html", {
+            'empty': True
+        })
+    paginator = Paginator(posts, 10)
+    pagenum = request.GET.get('pagenum', 1)
+    try: 
+        pagenum = int(pagenum)
+    except ValueError:
+        raise Http404
+    if pagenum in paginator.page_range:
+        items = paginator.page(pagenum)
+    else:
+        raise Http404    
+    return render(request, "network/index.html", {
+        'items': items,
+        'pagenum': pagenum,
+        'pages': [p for p in paginator.page_range],
+        'firstpage': pagenum == 1,
+        'lastpage': pagenum == paginator.num_pages,
+        'userpage': userpage, 
+        'title': title
+    })
