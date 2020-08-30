@@ -1,21 +1,42 @@
-from django.test import TestCase, LiveServerTestCase
+from django.test import TestCase, Client
 from .models import User, Post
-from time import sleep
-from selenium import webdriver
-
+from django.urls import reverse
 # Create your tests here.
-class BrowserTests(LiveServerTestCase):
+class BrowserTests(TestCase):
     def setUp(self):
-        self.selenium = webdriver.Chrome()
-        super(BrowserTests, self).setUp()
-    def test_title(self):
-        selenium = self.selenium
-        selenium.get('http://127.0.0.1:8000/')
-        self.assertEqual(selenium.title, 'Social Network') 
-        
-    def tearDown(self):
-        self.selenium.quit()
-        super(BrowserTests, self).tearDown()
+        j = User.objects.create_user(username='jthomson', email='jthomson@yahoo.com', password='pass')
+        j.save()
+        # Add 27 posts to test pagination
+        for i in range(27):
+            Post.objects.create(posting_user=j, content=f'this is post {i}')
+
+    def test_index(self):
+            c = Client()
+            # Checks for first page
+            response = c.get(reverse('index') + f'?pagenum={1}')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.context['items']), 10)
+            self.assertEqual(response.context['pagenum'], 1)
+            self.assertEqual(len(response.context['pages']), 3)
+            self.assertEqual(response.context['firstpage'], True)
+            self.assertEqual(response.context['lastpage'], False)
+            
+            # Checks for negative and invalid pages
+            response = c.get(reverse('index') + '?pagenum=-3')
+            self.assertEqual(response.status_code, 404)
+            response = c.get(reverse('index') + '?pagenum=19')
+            self.assertEqual(response.status_code, 404)
+            response= c.get(reverse('index') + '?pagenum=yeet')
+            self.assertEqual(response.status_code, 404)
+
+            # Checks for last page
+            response = c.get(reverse('index') + '?pagenum=3')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.context['items']), 7)
+            self.assertEqual(response.context['firstpage'], False)
+            self.assertEqual(response.context['lastpage'], True)
+
+
 
 
 

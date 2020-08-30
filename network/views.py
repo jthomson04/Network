@@ -14,14 +14,16 @@ def index(request):
             'empty': True
         })
     paginator = Paginator(posts, 10)
-    pagenum = int(request.GET.get('pagenum', 1))
-    if int(pagenum) in paginator.page_range:
+    pagenum = request.GET.get('pagenum', 1)
+    try: 
+        pagenum = int(pagenum)
+    except ValueError:
+        raise Http404
+    if pagenum in paginator.page_range:
         items = paginator.page(pagenum)
     else:
         raise Http404
-        
-    print(pagenum == 1)
-    print(pagenum == paginator.num_pages)
+    print(type(items))    
     return render(request, "network/index.html", {
         'items': items,
         'pagenum': pagenum,
