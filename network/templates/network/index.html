@@ -2,7 +2,7 @@
 
 {% block body %}
     {% with urlparam=title %}
-        <h1 style="text-align: center;" class="my-2">{{ title }}</h1>
+        <h1 class="my-2 center">{{ title }}</h1>
         {% if not userpage %}
             <div class="row">
                 <div class="col-md-8 col-lg-6 offset-md-2 offset-lg-3">
@@ -17,6 +17,9 @@
                     </div>
                 </div>
             </div>
+        {% else %}
+            <h5 class="text-muted center">Followers: {{ followers }}</h5>
+            <h5 class="text-muted center">Following: {{ following }}</h5>
         {% endif %}
         {% if not empty %}
             <ul class="pagination justify-content-center my-3">

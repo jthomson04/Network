@@ -43,6 +43,19 @@ class BrowserTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['userpage'], True)
         self.assertEqual(response.context['title'], 'jthomson')
+    
+    def test_followers_following(self):
+        c = Client()
+        john = User.objects.get(username='jthomson')
+        fred = User.objects.create_user(username='fred', email='fred@fred.com', password='pass')
+        bob = User.objects.create_user(username='bob', email='bob@bob.com', password='pass')
+        fred.save()
+        bob.save()
+        john.following.add(fred, bob)
+        john.followers.add(bob)
+        response = c.get(reverse('viewuser', args=('jthomson',)))
+        self.assertEqual(response.context['followers'], 1)
+        self.assertEqual(response.context['following'], 2)
 
 
 

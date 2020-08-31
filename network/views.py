@@ -85,13 +85,19 @@ def showposts(request, posts, userpage=False, title='All Posts'):
     if pagenum in paginator.page_range:
         items = paginator.page(pagenum)
     else:
-        raise Http404    
-    return render(request, "network/index.html", {
+        raise Http404
+    data = {
         'items': items,
         'pagenum': pagenum,
         'pages': [p for p in paginator.page_range],
         'firstpage': pagenum == 1,
         'lastpage': pagenum == paginator.num_pages,
         'userpage': userpage, 
-        'title': title
-    })
+        'title': title,
+    }
+    if userpage:
+        user = User.objects.get(username=title)
+        data['followers'] = user.followers.count()
+        data['following'] = user.following.count()
+            
+    return render(request, "network/index.html", data)
