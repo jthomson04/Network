@@ -1,6 +1,17 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
+    {% if user.is_authenticated %}
+        {% if userpage and user.username != title %}
+            <button class="btn btn-outline-primary btn-block">
+                {% if user_follows %}
+                    Unfollow
+                {% else %}
+                    Follow
+                {% endif %}
+            </button>
+        {% endif %}
+    {% endif %}
     {% with urlparam=title %}
         <h1 class="my-2 center">{{ title }}</h1>
         {% if not userpage %}

@@ -4,11 +4,15 @@ from django.urls import reverse
 # Create your tests here.
 class BrowserTests(TestCase):
     def setUp(self):
-        j = User.objects.create_user(username='jthomson', email='jthomson@yahoo.com', password='pass')
-        j.save()
+        john = User.objects.create_user(username='jthomson', email='jthomson@yahoo.com', password='pass')
+        fred = User.objects.create_user(username='fred', email='fred@fred.com', password='pass')
+        bob = User.objects.create_user(username='bob', email='bob@bob.com', password='pass')
+        john.save()
+        fred.save()
+        bob.save()
         # Add 27 posts to test pagination
         for i in range(27):
-            Post.objects.create(posting_user=j, content=f'this is post {i}')
+            Post.objects.create(posting_user=john, content=f'this is post {i}')
 
     def test_index(self):
             c = Client()
@@ -47,15 +51,33 @@ class BrowserTests(TestCase):
     def test_followers_following(self):
         c = Client()
         john = User.objects.get(username='jthomson')
-        fred = User.objects.create_user(username='fred', email='fred@fred.com', password='pass')
-        bob = User.objects.create_user(username='bob', email='bob@bob.com', password='pass')
-        fred.save()
-        bob.save()
+        fred = User.objects.get(username='fred')
+        bob = User.objects.get(username='bob')
         john.following.add(fred, bob)
         john.followers.add(bob)
         response = c.get(reverse('viewuser', args=('jthomson',)))
         self.assertEqual(response.context['followers'], 1)
         self.assertEqual(response.context['following'], 2)
+
+    def test_follow_unfollow(self):
+        c = Client()
+        self.assertEqual(c.login(username='jthomson', password='pass'), True)
+        j = User.objects.get(username='jthomson')
+        self.assertEqual(j.following.count(), 0)
+
+        j.following.add(User.objects.get(username='bob'))
+
+        response = c.get(reverse('viewuser', args=('bob',)))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['title'], 'bob')
+        self.assertEqual(response.context['user_follows'], True)
+        
+        response = c.get(reverse('viewuser', args=('fred',)))
+        self.assertNotEqual(response.context['user_follows'], None)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['userpage'], True)
+        self.assertEqual(response.context['user_follows'], False)
 
 
 

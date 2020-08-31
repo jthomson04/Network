@@ -72,7 +72,7 @@ def viewuser(request, username):
 
 
 def showposts(request, posts, userpage=False, title='All Posts'):
-    if posts.count() == 0:
+    if posts.count() == 0 and not userpage:
         return render(request, "network/index.html", {
             'empty': True
         })
@@ -95,9 +95,14 @@ def showposts(request, posts, userpage=False, title='All Posts'):
         'userpage': userpage, 
         'title': title,
     }
+    
     if userpage:
         user = User.objects.get(username=title)
         data['followers'] = user.followers.count()
         data['following'] = user.following.count()
-            
+        data['user_follows'] = False
+        if request.user.is_authenticated:
+            if request.user.following.filter(username=title).exists():
+                data['user_follows'] = True
+                
     return render(request, "network/index.html", data)
