@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest
 from django.shortcuts import render
 from django.urls import reverse
 from django.core.paginator import Paginator
@@ -104,5 +104,16 @@ def showposts(request, posts, userpage=False, title='All Posts'):
         if request.user.is_authenticated:
             if request.user.following.filter(username=title).exists():
                 data['user_follows'] = True
-                
+
     return render(request, "network/index.html", data)
+
+
+def newpost(request):
+    if not request.user.is_authenticated:
+        return HttpResponseBadRequest()
+    content = request.POST.get('content')
+    if content != None and content != '':
+        Post.objects.create(posting_user=request.user, content=content)
+        return HttpResponseRedirect(reverse('index'))
+def editpost(request):
+    pass

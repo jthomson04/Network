@@ -21,10 +21,20 @@
                         <div class="card-header">
                             <h3 class="card-title">New Post</h3>
                         </div>
-                        <div class="card-body">
-                            <textarea class="form-control" rows=4></textarea>
-                        </div>
-                        <button class="btn btn-outline-primary my-2 btn-block col-xs-10 offset-xs-1 col-md-8 offset-md-2">Post</button>
+                        {% if user.is_authenticated %}
+                            <form method='POST' action="{% url 'newpost' %}">
+                                {% csrf_token %}
+                                <div class="card-body">
+                                    <textarea class="form-control" rows=4 required name='content'></textarea>
+                                </div>
+                                <button class="btn btn-outline-primary my-2 btn-block col-xs-10 offset-xs-1 col-md-8 offset-md-2">Post</button>
+                            </form>
+                        {% else %}
+                            <div class="card-body">
+                                <textarea class="form-control disabled" rows=4 disabled></textarea>
+                            </div>
+                            <button class="btn btn-outline-primary my-2 btn-block col-xs-10 offset-xs-1 col-md-8 offset-md-2 disabled" disabled>Post</button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -94,9 +104,11 @@
                     <div class="col-md-8 col-lg-6 offset-md-2 offset-lg-3 my-4">
                         <div class="card">
                             <div class="card-header">
+                                <button class="btn btn-sm btn-outline-primary" style="float: right;">Edit</button>
                                 {% with username=item.posting_user.username %}
                                     <a href="{% url 'viewuser' username %}"><h4 class="card-title">{{ username }}</h4></a>
                                 {% endwith %}
+                                
                             </div>
                             <div class="card-body">
                                 <div class="my-2">{{ item.content }}</div>
