@@ -78,8 +78,12 @@ class BrowserTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['userpage'], True)
         self.assertEqual(response.context['user_follows'], False)
-
-
+    def test_follow_post(self):
+        c = Client()
+        self.assertTrue(c.login(username='jthomson', password='pass'))
+        self.assertEqual(User.objects.get(username='jthomson').following.count(), 0)
+        response = c.post('/users/bob', {})
+        self.assertEqual(User.objects.get(username='jthomson').following.all().first(), User.objects.get(username='bob'))
 
 
 

@@ -3,7 +3,7 @@
 {% block body %}
     {% if user.is_authenticated %}
         {% if userpage and user.username != title %}
-            <button class="btn btn-outline-primary btn-block">
+            <button class="btn btn-outline-primary btn-block" id="follow">
                 {% if user_follows %}
                     Unfollow
                 {% else %}
@@ -39,7 +39,7 @@
                 </div>
             </div>
         {% else %}
-            <h5 class="text-muted center">Followers: {{ followers }}</h5>
+            <h5 class="text-muted center" id="followers">Followers: {{ followers }}</h5>
             <h5 class="text-muted center">Following: {{ following }}</h5>
         {% endif %}
         {% if not empty %}
@@ -104,7 +104,11 @@
                     <div class="col-md-8 col-lg-6 offset-md-2 offset-lg-3 my-4">
                         <div class="card">
                             <div class="card-header">
-                                <button class="btn btn-sm btn-outline-primary" style="float: right;">Edit</button>
+                                {% if user.username == item.posting_user.username %}
+                                    {% with postid=item.id %}
+                                        <button class="btn btn-sm btn-outline-primary" style="float: right;" onclick="window.location.href='{% url 'editpost' postid %}'">Edit</button>
+                                    {% endwith %}
+                                {% endif %}
                                 {% with username=item.posting_user.username %}
                                     <a href="{% url 'viewuser' username %}"><h4 class="card-title">{{ username }}</h4></a>
                                 {% endwith %}
@@ -121,5 +125,28 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
-    
+    {% if userpage %}
+        <script>
+            const followbtn = document.getElementById('follow')
+            followbtn.onclick= () => {
+                
+                fetch('{% url 'viewuser' title %}', {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (followbtn.innerHTML == 'Follow') {
+                        followbtn.innerHTML = 'Unfollow'
+                    } else {
+                        followbtn.innerHTML = 'Follow'
+                    }
+                    console.log(data)
+                    console.log(data.followers)
+                    console.log(data['followers'])
+                    document.getElementById('followers').innerHTML = `Followers: ${data.followers}`;
+                })
+            }
+        </script>
+    {% endif %}
 {% endblock %}

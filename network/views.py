@@ -1,11 +1,11 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.core.paginator import Paginator
+from django.views.decorators.csrf import csrf_exempt
 from .models import User, Post
-
 
 def index(request):
     posts = Post.objects.all().order_by('-time')
@@ -61,8 +61,22 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
-
+@csrf_exempt
 def viewuser(request, username):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                
+                return HttpResponseRedirect(reverse('index'))
+            if request.user.following.filter(username=user.username).exists():
+                request.user.following.remove(user)
+            else:
+                request.user.following.add(user)
+            return JsonResponse({'followers': user.followers.count})
+                
+        return HttpResponseRedirect(reverse('index'))
     try:
         user = User.objects.get(username=username)
     except NameError:
@@ -72,10 +86,6 @@ def viewuser(request, username):
 
 
 def showposts(request, posts, userpage=False, title='All Posts'):
-    if posts.count() == 0 and not userpage:
-        return render(request, "network/index.html", {
-            'empty': True
-        })
     paginator = Paginator(posts, 10)
     pagenum = request.GET.get('pagenum', 1)
     try: 
@@ -115,5 +125,25 @@ def newpost(request):
     if content != None and content != '':
         Post.objects.create(posting_user=request.user, content=content)
         return HttpResponseRedirect(reverse('index'))
-def editpost(request):
-    pass
+
+def editpost(request, postid):
+    if post.posting_user.username != request.user.username:
+        return HttpResponseRedirect(reverse('index'))
+    
+    if request.method == 'GET':
+        try:
+            post = Post.objects.get(pk=postid)
+        except Post.DoesNotExist:
+            return HttpResponseRedirect(reverse('index'))
+        
+
+        return render(request, 'network/edit.html', {
+            'post': post
+        })
+
+def following(request):
+    if not request.user.is_authenticated:
+        return HttpResponseBadRequest(reverse('index'))
+    posts = Post.objects.filter(posting_user__in=request.user.following.all())
+    return showposts(request, posts, False, 'Following')
+    

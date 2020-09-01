@@ -1,0 +1,11 @@
+{% extends 'network/layout.html' %}
+
+{% block body %}
+    <h1 class="my-2 center">Edit Post</h1>
+    <div class="col-md-8 col-lg-6 offset-md-2 offset-lg-3">
+        <form>
+            <textarea class="form-control" rows=4 required name='content'>{{ post.content }}</textarea>
+            <button class="btn btn-outline-primary my-3 btn-block col-xs-10 offset-xs-1 col-md-8 offset-md-2">Save</button>
+        </form>
+    </div>
+{% endblock %}
