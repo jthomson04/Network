@@ -74,7 +74,7 @@ def viewuser(request, username):
                 request.user.following.remove(user)
             else:
                 request.user.following.add(user)
-            return JsonResponse({'followers': user.followers.count})
+            return JsonResponse({'followers': user.followers.count()})
                 
         return HttpResponseRedirect(reverse('index'))
     try:

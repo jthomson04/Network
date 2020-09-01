@@ -136,7 +136,7 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (followbtn.innerHTML == 'Follow') {
+                    if (followbtn.innerHTML.includes('Follow')) {
                         followbtn.innerHTML = 'Unfollow'
                     } else {
                         followbtn.innerHTML = 'Follow'
