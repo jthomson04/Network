@@ -106,7 +106,7 @@
                             <div class="card-header">
                                 {% if user.username == item.posting_user.username %}
                                     {% with postid=item.id %}
-                                        <button class="btn btn-sm btn-outline-primary" style="float: right;" onclick="window.location.href='{% url 'editpost' postid %}'">Edit</button>
+                                        <button data-link="{{ item.id }}" class="btn btn-sm btn-outline-primary editbutton" style="float: right;">Edit</button>
                                     {% endwith %}
                                 {% endif %}
                                 {% with username=item.posting_user.username %}
@@ -115,7 +115,7 @@
                                 
                             </div>
                             <div class="card-body">
-                                <div class="my-2">{{ item.content }}</div>
+                                <textarea readonly class="form-control my-3" data-content="{{ item.id }}" data-buttonshow="false">{{ item.content }}</textarea>
                                 <i class="fa fa-heart likebutton mx-1"></i>
                                 <span class="likeamount">{{ item.likes.count }}</span>
                             </div>
@@ -125,6 +125,48 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
+    <script>
+        document.querySelectorAll('.editbutton').forEach(element => {
+            element.onclick = () => {
+                console.log(element.dataset.link)
+                const textarea = document.querySelector(`[data-content='${element.dataset.link}']`);
+                textarea.readOnly = false;
+                if (textarea.dataset.buttonshow == 'false') {
+                    const submitbutton = document.createElement('button')
+                    submitbutton.className = 'btn btn-outline-primary btn-block my-2';
+                    submitbutton.innerHTML = 'Save';
+                    submitbutton.onclick = () => {
+                        console.log(textarea.value);
+                        console.log(textarea.dataset.content);
+                        console.log(Cookies.get('csrftoken'))
+
+                        fetch("{% url 'index' %}", {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                content: textarea.value,
+                                postid: textarea.dataset.content,
+                            }),
+                            headers: new Headers({
+                                'X-CSRFToken': Cookies.get('csrftoken'),
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status == 1) {
+                                textarea.readOnly = true;
+                                submitbutton.remove();
+                            }
+                        })
+                    }
+                    textarea.dataset.buttonshow = 'true';
+                    $(textarea).after(submitbutton);
+                }
+            }
+        })
+
+    </script>
     {% if userpage %}
         <script>
             const followbtn = document.getElementById('follow')

@@ -14,6 +14,7 @@ class BrowserTests(TestCase):
         for i in range(27):
             Post.objects.create(posting_user=john, content=f'this is post {i}')
 
+        Post.objects.create(posting_user=fred, content='this is a post from fred')
     def test_index(self):
             c = Client()
             # Checks for first page
@@ -37,7 +38,7 @@ class BrowserTests(TestCase):
             # Checks for last page
             response = c.get(reverse('index') + '?pagenum=3')
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.context['items']), 7)
+            self.assertEqual(len(response.context['items']), 8)
             self.assertEqual(response.context['firstpage'], False)
             self.assertEqual(response.context['lastpage'], True)
 

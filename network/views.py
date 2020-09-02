@@ -4,10 +4,38 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpRespons
 from django.shortcuts import render
 from django.urls import reverse
 from django.core.paginator import Paginator
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, requires_csrf_token
 from .models import User, Post
+import json
 
+@requires_csrf_token
 def index(request):
+    if request.method == 'POST':
+        
+        try:
+            data = json.loads(request.body)
+            content = data.get('content')
+            postid = data.get('postid')
+        except json.decoder.JSONDecodeError:
+            print('post data')
+            content = request.POST.get('content')
+            postid = request.POST.get('postid')
+        print(content)
+        print(postid)
+        if content == None or postid == None or content == '':
+            print('field invalid')
+            return HttpResponseBadRequest()
+        try:
+            post = Post.objects.get(pk=postid)
+        except Post.DoesNotExist:
+            return HttpResponseRedirect(reverse('index'))
+
+        if post.posting_user.username != request.user.username:
+            return HttpResponseBadRequest()
+        post.content = content
+        post.save()
+        return JsonResponse({'status': 1})
+
     posts = Post.objects.all().order_by('-time')
     return showposts(request, posts)
 
@@ -126,20 +154,28 @@ def newpost(request):
         Post.objects.create(posting_user=request.user, content=content)
         return HttpResponseRedirect(reverse('index'))
 
-def editpost(request, postid):
+
+def edit(request):
+    content = request.POST.get('content')
+    postid = request.POST.get('postid')
+    print(content, postid)
+    print(request.method)
+    if content == None or postid == None or content == '':
+        print('field invalid')
+        return HttpResponseBadRequest()
+    try:
+        post = Post.objects.get(pk=postid)
+    except Post.DoesNotExist:
+        return HttpResponseRedirect(reverse('index'))
+
     if post.posting_user.username != request.user.username:
         return HttpResponseRedirect(reverse('index'))
-    
-    if request.method == 'GET':
-        try:
-            post = Post.objects.get(pk=postid)
-        except Post.DoesNotExist:
-            return HttpResponseRedirect(reverse('index'))
+    post.content = content
+    post.save()
+    return HttpResponseRedirect(reverse('index'))
         
-
-        return render(request, 'network/edit.html', {
-            'post': post
-        })
+    
+    
 
 def following(request):
     if not request.user.is_authenticated:
