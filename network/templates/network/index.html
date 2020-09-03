@@ -1,5 +1,6 @@
 {% extends "network/layout.html" %}
-
+{% load custom_tags %}
+{% debug %}
 {% block body %}
     {% if user.is_authenticated %}
         {% if userpage and user.username != title %}
@@ -99,6 +100,9 @@
                     </li>
                 {% endif %}
             </ul>
+            {{ likes|printvar }}
+            {% setvar 0 as num %}
+            {{ likes|printvar }}
             {% for item in items %}
                 <div class="row">
                     <div class="col-md-8 col-lg-6 offset-md-2 offset-lg-3 my-4">
@@ -116,12 +120,26 @@
                             </div>
                             <div class="card-body">
                                 <textarea readonly class="form-control my-3" data-content="{{ item.id }}" data-buttonshow="false">{{ item.content }}</textarea>
-                                <i class="fa fa-heart likebutton mx-1"></i>
-                                <span class="likeamount">{{ item.likes.count }}</span>
+                                
+                                
+                                {{ num|printvar }}
+                                
+                                {% if likes|index:num %}
+                                    {{  "YEET"|printvar}}
+                                    <i class="fa fa-heart likebutton mx-1" data-postid="{{ item.id }}" style="color: red;"></i>
+                                {% else %}
+                                    
+                                    <i class="fa fa-heart likebutton mx-1" data-postid="{{ item.id }}"></i>
+                                {% endif %}
+                                
+                                <span class="likeamount" data-amountid="{{ item.id }}">{{ item.likes.count }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                {% setvar num|add:1 as num %}
+                
             {% endfor %}
         {% endif %}
     {% endwith %}
@@ -148,8 +166,6 @@
                             }),
                             headers: new Headers({
                                 'X-CSRFToken': Cookies.get('csrftoken'),
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'X-Requested-With': 'XMLHttpRequest'
                             })
                         })
                         .then(response => response.json())
@@ -163,6 +179,35 @@
                     textarea.dataset.buttonshow = 'true';
                     $(textarea).after(submitbutton);
                 }
+            }
+        })
+        document.querySelectorAll('.likebutton').forEach(element => {
+            element.onclick = () => {
+                fetch("{% url 'like' %}", {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        postid: element.dataset.postid
+                    }),
+                    headers: new Headers({
+                        'X-CSRFToken': Cookies.get('csrftoken'),
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (data.status == 1) {
+                        console.log('YEET');
+                        const likecount = document.querySelector(`[data-amountid='${element.dataset.postid}']`);
+                        if (element.style.color == 'red' ) {
+                            element.style.color = 'black';
+                        } else {
+                            element.style.color = 'red';
+                        }
+                        likecount.innerHTML = data.likes;
+                        
+                        
+                    }
+                })
             }
         })
 

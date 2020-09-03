@@ -11,7 +11,6 @@ import json
 @requires_csrf_token
 def index(request):
     if request.method == 'POST':
-        
         try:
             data = json.loads(request.body)
             content = data.get('content')
@@ -37,6 +36,8 @@ def index(request):
         return JsonResponse({'status': 1})
 
     posts = Post.objects.all().order_by('-time')
+    likes = []
+    
     return showposts(request, posts)
 
 
@@ -110,10 +111,15 @@ def viewuser(request, username):
     except NameError:
         raise Http404
     posts = Post.objects.filter(posting_user=user).order_by('-time')
+    likes = []
+    
     return showposts(request, posts, True, user.username)
 
 
 def showposts(request, posts, userpage=False, title='All Posts'):
+    likes = []
+    for post in posts:
+        likes.append(post.likes.filter(username=request.user.username).exists())
     paginator = Paginator(posts, 10)
     pagenum = request.GET.get('pagenum', 1)
     try: 
@@ -132,6 +138,7 @@ def showposts(request, posts, userpage=False, title='All Posts'):
         'lastpage': pagenum == paginator.num_pages,
         'userpage': userpage, 
         'title': title,
+        'likes': likes
     }
     
     if userpage:
@@ -183,3 +190,21 @@ def following(request):
     posts = Post.objects.filter(posting_user__in=request.user.following.all())
     return showposts(request, posts, False, 'Following')
     
+
+def like(request):
+    if request.method == 'POST' and request.user.is_authenticated:
+        try:
+            data = json.loads(request.body)
+            postid = data.get('postid')
+        except json.decoder.JSONDecodeError:
+            print('post data')
+            postid = request.POST.get('postid')
+        post = Post.objects.get(pk=postid)
+        if not post.likes.filter(username=request.user.username).exists():
+            post.likes.add(request.user)
+        else:
+            post.likes.remove(request.user)
+        return JsonResponse({'status': 1, 'likes': post.likes.count()})
+    else:
+        return HttpResponseBadRequest()
+
